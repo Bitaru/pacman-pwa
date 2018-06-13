@@ -3,8 +3,6 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
-const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 
@@ -17,30 +15,6 @@ const phaserPath = path.join(phaserRoot, 'phaser-split.js');
 const pixiPath = path.join(phaserRoot, 'pixi.js');
 const p2Path = path.join(phaserRoot, 'p2.js');
 
-const sw = new SWPrecacheWebpackPlugin({
-  cacheId: 'pacman-cache',
-  filename: 'service-worker.js',
-  minify: true,
-  staticFileGlobs: [
-    `${outputPath}/assets/**/*`,
-    `${outputPath}/*.{html,json,ico,png,svg}`
-  ],
-  stripPrefix: `${outputPath}/`
-});
-
-const bs = new BrowserSyncPlugin(
-  {
-    open: false,
-    host: 'localhost',
-    port: 4000,
-    proxy: 'http://localhost:3000/'
-  },
-  {
-    reload: false
-  }
-);
-
-PLUGINS = IS_PROD ? [sw] : [bs];
 
 function exposeRules(modulePath, name) {
   return {
@@ -70,6 +44,12 @@ module.exports = {
       p2: p2Path
     }
   },
+  devServer: {
+    contentBase: path.resolve(__dirname, 'dist'),
+    port: 3000,
+    stats: 'minimal',
+    historyApiFallback: true,
+  },
   module: {
     rules: [
       {
@@ -82,11 +62,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      compress: IS_PROD,
-      comments: !IS_PROD
-    }),
-    new CleanWebpackPlugin([outputPath]),
     new CopyWebpackPlugin([
       {
         from: path.join(__dirname, 'assets/**/*'),
@@ -98,15 +73,9 @@ module.exports = {
       }
     ]),
     new HtmlWebpackPlugin({
-      title: 'Pacman PWA',
-      inject: true,
-      template: 'index.html'
+      hash: true,
+      template:  path.resolve(__dirname, 'src/index.html'),
+      inject: 'head'
     }),
-    ...PLUGINS
   ],
-  devServer: {
-    contentBase: outputPath,
-    compress: true,
-    port: 3000
-  }
 };

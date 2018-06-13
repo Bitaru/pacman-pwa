@@ -6,7 +6,7 @@ import './register-sw';
 import { BootState } from './states/boot';
 import { PreloadState } from './states/preload';
 import { GameState } from './states/game';
-
+console.log('here')
 /**
  * Main game object.
  */
